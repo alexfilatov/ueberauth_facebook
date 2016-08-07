@@ -1,4 +1,7 @@
 defmodule Ueberauth.Strategy.Facebook do
+
+    require Logger
+
   @moduledoc """
   Facebook Strategy for Überauth.
   """
@@ -9,8 +12,7 @@ defmodule Ueberauth.Strategy.Facebook do
                           allowed_request_params: [
                             :auth_type,
                             :scope,
-                            :locale,
-                            :state
+                            :locale
                           ]
 
 
@@ -26,13 +28,14 @@ defmodule Ueberauth.Strategy.Facebook do
      |> option(:allowed_request_params)
      |> Enum.map(&to_string/1)
 
+    Logger.error "redirect_uri: #{inspect facebook_callback_url(conn)}"
+
     authorize_url = conn.params
       |> maybe_replace_param(conn, "auth_type", :auth_type)
       |> maybe_replace_param(conn, "scope", :default_scope)
-      |> maybe_replace_param(conn, "state", :state)
       |> Enum.filter(fn {k,_v} -> Enum.member?(allowed_params, k) end)
       |> Enum.map(fn {k,v} -> {String.to_existing_atom(k), v} end)
-      |> Keyword.put(:redirect_uri, callback_url(conn))
+      |> Keyword.put(:redirect_uri, facebook_callback_url(conn))
       |> Ueberauth.Strategy.Facebook.OAuth.authorize_url!
 
     redirect!(conn, authorize_url)
@@ -42,7 +45,7 @@ defmodule Ueberauth.Strategy.Facebook do
   Handles the callback from Facebook.
   """
   def handle_callback!(%Plug.Conn{params: %{"code" => code}} = conn) do
-    opts = [redirect_uri: callback_url(conn)]
+    opts = [redirect_uri: facebook_callback_url(conn)]
     token = Ueberauth.Strategy.Facebook.OAuth.get_token!([code: code], opts)
 
     if token.access_token == nil do
@@ -185,4 +188,12 @@ defmodule Ueberauth.Strategy.Facebook do
       )
     end
   end
+
+  defp facebook_callback_url(conn) do
+    cond do
+        String.length(conn.query_params["redirect_uri"]) > 0 -> conn.query_params["redirect_uri"]
+        true ->Ueberauth.Strategy.Helpers.callback_url conn
+    end
+  end
+
 end
