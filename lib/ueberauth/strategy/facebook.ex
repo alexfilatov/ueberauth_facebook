@@ -187,7 +187,7 @@ defmodule Ueberauth.Strategy.Facebook do
 
   defp facebook_callback_url(conn) do
     cond do
-        String.length(conn.query_params["redirect_uri"]) > 0 -> conn.query_params["redirect_uri"]
+        conn.query_params["redirect_uri"] -> conn.query_params["redirect_uri"]
         true ->Ueberauth.Strategy.Helpers.callback_url conn
     end
   end
