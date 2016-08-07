@@ -1,7 +1,5 @@
 defmodule Ueberauth.Strategy.Facebook do
 
-    require Logger
-
   @moduledoc """
   Facebook Strategy for Überauth.
   """
@@ -27,8 +25,6 @@ defmodule Ueberauth.Strategy.Facebook do
     allowed_params = conn
      |> option(:allowed_request_params)
      |> Enum.map(&to_string/1)
-
-    Logger.error "redirect_uri: #{inspect facebook_callback_url(conn)}"
 
     authorize_url = conn.params
       |> maybe_replace_param(conn, "auth_type", :auth_type)
